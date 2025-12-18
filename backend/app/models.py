@@ -54,3 +54,28 @@ class RecruiterProfile(Base):
     )
 
     recruiter: Mapped[Recruiter] = relationship(back_populates="profile")
+
+
+class RecruiterTarget(Base):
+    """A queue of LinkedIn URLs we want to enrich (batch/scheduled jobs).
+
+    This allows you to:
+    - store "people of interest" (recruiters, hiring managers, etc.)
+    - run a batch job that enriches pending items
+    - persist status + failure reasons
+    """
+
+    __tablename__ = "recruiter_targets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    linkedin_url: Mapped[str] = mapped_column(String(500), unique=True, nullable=False)
+
+    # pending -> running -> succeeded|failed
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_enriched_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

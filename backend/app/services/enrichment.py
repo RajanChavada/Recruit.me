@@ -41,10 +41,12 @@ class EnrichmentService:
                 linkedin_url=linkedin_url,
             )
         except (LinkedInScrapingError, GeminiVisionError):
+            # Preserve the specific error message so the API caller sees an actionable reason.
             raise
         except Exception as e:
             logger.exception("Enrichment failed")
-            raise GeminiVisionError("Could not analyze profile") from e
+            # Don't mask unexpected failures as Gemini errors; keep this generic but accurate.
+            raise GeminiVisionError("Could not enrich profile") from e
 
         recruiter = self._db.query(Recruiter).filter(Recruiter.linkedin_url == linkedin_url).one_or_none()
         if recruiter is None:

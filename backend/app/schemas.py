@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class LinkedInProfileInsights(BaseModel):
@@ -18,6 +18,9 @@ class LinkedInProfileInsights(BaseModel):
     email_explicit: Optional[str] = None
     email_inferred: Optional[str] = None
     email_inference_notes: Optional[str] = None
+    # Optional: list of plausible emails generated from name/company patterns.
+    # Useful for MVP display + manual verification.
+    email_candidates: List[str] = Field(default_factory=list)
     current_role: Optional[str] = None
     current_company: Optional[str] = None
     unique_hooks: List[str] = Field(default_factory=list)
@@ -43,3 +46,34 @@ class EnrichRecruiterRequest(BaseModel):
 class EnrichRecruiterResponse(BaseModel):
     status: str = "ok"
     profile: RecruiterProfileDTO
+
+
+class AddRecruiterTargetRequest(BaseModel):
+    linkedin_url: str
+
+
+class RecruiterTargetDTO(BaseModel):
+    id: int
+    linkedin_url: str
+    status: str
+    last_error: Optional[str] = None
+    last_enriched_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AddRecruiterTargetResponse(BaseModel):
+    status: str = "ok"
+    target: RecruiterTargetDTO
+
+
+class RunBatchRequest(BaseModel):
+    limit: int = 10
+
+
+class RunBatchResponse(BaseModel):
+    status: str = "ok"
+    attempted: int
+    succeeded: int
+    failed: int
